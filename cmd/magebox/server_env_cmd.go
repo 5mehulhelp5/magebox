@@ -166,7 +166,7 @@ func runServerEnvAdd(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to create environment: %s", errResp.Error)
 	}
 
@@ -215,7 +215,7 @@ func runServerEnvRemove(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to remove environment: %s", errResp.Error)
 	}
 
@@ -252,7 +252,7 @@ func runServerEnvList(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to list environments: %s", errResp.Error)
 	}
 
@@ -329,7 +329,7 @@ func runServerEnvShow(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to get environment: %s", errResp.Error)
 	}
 
@@ -366,7 +366,7 @@ func runServerEnvShow(cmd *cobra.Command, args []string) error {
 			Role     string   `json:"role"`
 			Projects []string `json:"projects"`
 		}
-		json.NewDecoder(usersResp.Body).Decode(&users)
+		_ = json.NewDecoder(usersResp.Body).Decode(&users)
 		usersResp.Body.Close()
 
 		accessCount := 0
@@ -410,12 +410,12 @@ func runServerEnvSync(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("sync failed: %s", errResp.Error)
 	}
 
 	var result teamserver.SuccessResponse
-	json.NewDecoder(resp.Body).Decode(&result)
+	_ = json.NewDecoder(resp.Body).Decode(&result)
 
 	cli.PrintSuccess("Key synchronization completed!")
 	if result.Message != "" {

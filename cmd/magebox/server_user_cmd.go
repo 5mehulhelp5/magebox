@@ -434,7 +434,7 @@ func runServerUserAdd(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to create user: %s", errResp.Error)
 	}
 
@@ -485,7 +485,7 @@ func runServerUserRemove(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to remove user: %s", errResp.Error)
 	}
 
@@ -509,7 +509,7 @@ func runServerUserList(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to list users: %s", errResp.Error)
 	}
 
@@ -586,7 +586,7 @@ func runServerUserShow(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to get user: %s", errResp.Error)
 	}
 
@@ -666,7 +666,7 @@ func runServerUserRenew(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to renew user: %s", errResp.Error)
 	}
 
@@ -707,7 +707,7 @@ func runServerJoin(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("join failed: %s", errResp.Error)
 	}
 
@@ -846,7 +846,7 @@ func runServerWhoami(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to get user info: %s", errResp.Error)
 	}
 
@@ -889,7 +889,7 @@ func runServerWhoami(cmd *cobra.Command, args []string) error {
 			Name string `json:"name"`
 			Host string `json:"host"`
 		}
-		json.NewDecoder(envResp.Body).Decode(&envs)
+		_ = json.NewDecoder(envResp.Body).Decode(&envs)
 		envResp.Body.Close()
 
 		if len(envs) > 0 {
@@ -924,7 +924,7 @@ func runServerUserGrant(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to grant access: %s", errResp.Error)
 	}
 
@@ -954,7 +954,7 @@ func runServerUserRevoke(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to revoke access: %s", errResp.Error)
 	}
 

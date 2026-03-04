@@ -118,7 +118,7 @@ func runServerProjectAdd(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to create project: %s", errResp.Error)
 	}
 
@@ -159,7 +159,7 @@ func runServerProjectRemove(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to remove project: %s", errResp.Error)
 	}
 
@@ -183,7 +183,7 @@ func runServerProjectList(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to list projects: %s", errResp.Error)
 	}
 
@@ -242,7 +242,7 @@ func runServerProjectShow(cmd *cobra.Command, args []string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp teamserver.ErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
 		return fmt.Errorf("failed to get project: %s", errResp.Error)
 	}
 
@@ -278,7 +278,7 @@ func runServerProjectShow(cmd *cobra.Command, args []string) error {
 			Host    string `json:"host"`
 			Port    int    `json:"port"`
 		}
-		json.NewDecoder(envResp.Body).Decode(&envs)
+		_ = json.NewDecoder(envResp.Body).Decode(&envs)
 		envResp.Body.Close()
 
 		// Filter environments for this project
@@ -313,7 +313,7 @@ func runServerProjectShow(cmd *cobra.Command, args []string) error {
 			Role     string   `json:"role"`
 			Projects []string `json:"projects"`
 		}
-		json.NewDecoder(usersResp.Body).Decode(&users)
+		_ = json.NewDecoder(usersResp.Body).Decode(&users)
 		usersResp.Body.Close()
 
 		var accessUsers []string

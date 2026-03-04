@@ -18,8 +18,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
 	"qoliber/magebox/internal/cli"
+
+	"github.com/spf13/cobra"
 )
 
 var sshCmd = &cobra.Command{

@@ -9,8 +9,9 @@ import (
 	"runtime"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	"qoliber/magebox/internal/lib"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Loader loads and parses installer configurations

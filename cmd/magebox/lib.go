@@ -9,11 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"qoliber/magebox/internal/config"
 	"qoliber/magebox/internal/lib"
 	libconfig "qoliber/magebox/internal/lib/config"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
 
 var libCmd = &cobra.Command{
