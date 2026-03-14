@@ -399,15 +399,17 @@ func (m *DnsmasqManager) GetStatus() DnsmasqStatus {
 func (m *DnsmasqManager) enableDnsmasqConfDir() error {
 	dnsmasqConf := "/etc/dnsmasq.conf"
 
-	// Read current config
-	content, err := os.ReadFile(dnsmasqConf)
+	// Read current config (use sudo since /etc/dnsmasq.conf may not be world-readable)
+	cmd := exec.Command("sudo", "cat", dnsmasqConf)
+	content, err := cmd.Output()
 	if err != nil {
-		if os.IsNotExist(err) {
-			// Create a minimal dnsmasq.conf that includes the conf.d directory
+		// Check if file doesn't exist (sudo cat returns exit code 1)
+		if statErr := exec.Command("sudo", "test", "-f", dnsmasqConf).Run(); statErr != nil {
+			// File doesn't exist — create a minimal dnsmasq.conf
 			minimalConf := "# MageBox: minimal dnsmasq config\nconf-dir=/etc/dnsmasq.d\n"
 			return m.writeConfigWithSudo(dnsmasqConf, minimalConf)
 		}
-		return err
+		return fmt.Errorf("failed to read %s: %w", dnsmasqConf, err)
 	}
 
 	// Check if conf-dir is already enabled
@@ -417,8 +419,8 @@ func (m *DnsmasqManager) enableDnsmasqConfDir() error {
 	}
 
 	// Use sed to uncomment the conf-dir line
-	cmd := exec.Command("sudo", "sed", "-i", "s|#conf-dir=/etc/dnsmasq.d|conf-dir=/etc/dnsmasq.d|", dnsmasqConf)
-	return cmd.Run()
+	sedCmd := exec.Command("sudo", "sed", "-i", "s|#conf-dir=/etc/dnsmasq.d|conf-dir=/etc/dnsmasq.d|", dnsmasqConf)
+	return sedCmd.Run()
 }
 
 // setupSystemdResolved configures systemd-resolved to use dnsmasq for the configured TLD
