@@ -81,9 +81,8 @@ type savedConfigRow struct {
 
 // savedExposeState holds all state needed to revert an expose session
 type savedExposeState struct {
-	DBRows         []savedConfigRow  `json:"db_rows"`
-	EnvLocked      map[string]string `json:"env_locked"`       // path -> value for env.php locked entries
-	ConfigPHPPaths []string          `json:"config_php_paths"` // paths that were in config.php (need --lock-env to override)
+	DBRows     []savedConfigRow `json:"db_rows"`
+	EnvPHPPath string           `json:"env_php_path"` // path to env.php backup
 }
 
 func runExpose(cmd *cobra.Command, args []string) error {
@@ -352,14 +351,13 @@ func runExposeStatus(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// saveExposeState captures the current base URL state from both the database
-// and config files for later restoration
+// saveExposeState captures the current base URL state from the database
+// and backs up env.php for later restoration
 func saveExposeState(db *dbInfo, dbName, phpBin, cwd, stateFile, localDomain string) {
+	_ = phpBin // reserved for future use
 	fmt.Print("Saving current base URLs... ")
 
-	state := savedExposeState{
-		EnvLocked: make(map[string]string),
-	}
+	state := savedExposeState{}
 
 	// 1. Read all base URL rows from core_config_data
 	if db != nil {
@@ -404,16 +402,12 @@ func saveExposeState(db *dbInfo, dbName, phpBin, cwd, stateFile, localDomain str
 		}
 	}
 
-	// 2. Read effective values from all config layers via bin/magento config:show
-	// These include env.php and config.php locked values that override the DB
-	for _, path := range baseURLConfigPaths {
-		cmd := exec.Command(phpBin, "bin/magento", "config:show", path)
-		cmd.Dir = cwd
-		if out, err := cmd.Output(); err == nil {
-			val := strings.TrimSpace(string(out))
-			if val != "" && !strings.Contains(val, ".trycloudflare.com") {
-				state.EnvLocked[path] = val
-			}
+	// 2. Back up env.php so we can restore it exactly on revert
+	envPHP := filepath.Join(cwd, "app", "etc", "env.php")
+	envBackup := filepath.Join(filepath.Dir(stateFile), fmt.Sprintf("tunnel-%s-env.php.bak", filepath.Base(stateFile)))
+	if content, err := os.ReadFile(envPHP); err == nil {
+		if err := os.WriteFile(envBackup, content, 0644); err == nil {
+			state.EnvPHPPath = envBackup
 		}
 	}
 
@@ -431,8 +425,12 @@ func saveExposeState(db *dbInfo, dbName, phpBin, cwd, stateFile, localDomain str
 		return
 	}
 
-	fmt.Printf("%s (%d DB entries, %d locked)\n",
-		cli.Success("done"), len(state.DBRows), len(state.EnvLocked))
+	envLabel := ""
+	if state.EnvPHPPath != "" {
+		envLabel = ", env.php backed up"
+	}
+	fmt.Printf("%s (%d DB entries%s)\n",
+		cli.Success("done"), len(state.DBRows), envLabel)
 }
 
 // setAllBaseURLs updates base URLs in both core_config_data and env.php
@@ -528,28 +526,20 @@ func revertExposeState(db *dbInfo, dbName, phpBin, cwd, stateFile string) {
 		}
 	}
 
-	// 2. Restore env.php locked values, or delete them if they weren't originally there
-	fmt.Print("Reverting env.php base URLs... ")
-	failed := false
-	for _, path := range baseURLConfigPaths {
-		if origVal, wasLocked := state.EnvLocked[path]; wasLocked {
-			// Restore original locked value
-			cmd := exec.Command(phpBin, "bin/magento", "config:set", "--lock-env", path, origVal)
-			cmd.Dir = cwd
-			if err := cmd.Run(); err != nil {
-				failed = true
+	// 2. Restore env.php from backup
+	if state.EnvPHPPath != "" {
+		fmt.Print("Restoring env.php... ")
+		envPHP := filepath.Join(cwd, "app", "etc", "env.php")
+		if backup, err := os.ReadFile(state.EnvPHPPath); err == nil {
+			if err := os.WriteFile(envPHP, backup, 0644); err == nil {
+				fmt.Println(cli.Success("done"))
+			} else {
+				fmt.Println(cli.Error("failed: " + err.Error()))
 			}
 		} else {
-			// Remove the lock we added (delete from env.php)
-			cmd := exec.Command(phpBin, "bin/magento", "config:delete", "--lock-env", path)
-			cmd.Dir = cwd
-			_ = cmd.Run() // Ignore errors — path may not exist in env.php
+			fmt.Println(cli.Warning("backup not found"))
 		}
-	}
-	if failed {
-		fmt.Println(cli.Warning("partial"))
-	} else {
-		fmt.Println(cli.Success("done"))
+		os.Remove(state.EnvPHPPath)
 	}
 
 	// 3. Flush cache
