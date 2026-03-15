@@ -224,22 +224,27 @@ func runExpose(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
-	// Handle Ctrl+C gracefully
+	// Handle Ctrl+C — cloudflared also receives the signal and exits,
+	// which makes Wait() return. We do the revert after Wait() completes.
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		<-sigChan
 		fmt.Println()
-
-		revertExposeState(db, cfg.DatabaseName(), phpBin, cwd, stateFile)
-		removeTunnelDomain(p, cwd, cfg)
-
-		fmt.Print("Stopping tunnel... ")
+		fmt.Println("Shutting down...")
+		// Cloudflared receives the same signal and will exit on its own.
+		// If it doesn't, send SIGTERM explicitly.
 		_ = tunnelCmd.Process.Signal(syscall.SIGTERM)
 	}()
 
 	_ = tunnelCmd.Wait()
+
+	// Revert everything after cloudflared has stopped
+	if tunnelURL != "" {
+		revertExposeState(db, cfg.DatabaseName(), phpBin, cwd, stateFile)
+		removeTunnelDomain(p, cwd, cfg)
+	}
 
 	// Clean up run files
 	os.Remove(pidFile)
@@ -251,7 +256,7 @@ func runExpose(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cloudflared exited without providing a tunnel URL")
 	}
 
-	fmt.Println(cli.Success("stopped"))
+	cli.PrintSuccess("Tunnel stopped and all changes reverted")
 	return nil
 }
 
