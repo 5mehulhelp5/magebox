@@ -29,6 +29,9 @@ import (
 	"qoliber/magebox/internal/verbose"
 )
 
+var bootstrapUnattended bool
+var bootstrapTLD string
+
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",
 	Short: "Initialize MageBox environment",
@@ -57,6 +60,8 @@ Run this once after installing MageBox to prepare your system.`,
 }
 
 func init() {
+	bootstrapCmd.Flags().BoolVar(&bootstrapUnattended, "unattended", false, "Run without interactive prompts (auto-accept all defaults)")
+	bootstrapCmd.Flags().StringVar(&bootstrapTLD, "tld", "", "Set the top-level domain for local development (default: test)")
 	rootCmd.AddCommand(bootstrapCmd)
 }
 
@@ -104,15 +109,19 @@ func runBootstrap(cmd *cobra.Command, args []string) error {
 			fmt.Println()
 
 			// Ask user if they want to continue
-			fmt.Print("Continue with bootstrap? [Y/n]: ")
-			reader := bufio.NewReader(os.Stdin)
-			answer, _ := reader.ReadString('\n')
-			answer = strings.TrimSpace(strings.ToLower(answer))
+			if bootstrapUnattended {
+				fmt.Println("  Continuing (unattended mode)")
+			} else {
+				fmt.Print("Continue with bootstrap? [Y/n]: ")
+				reader := bufio.NewReader(os.Stdin)
+				answer, _ := reader.ReadString('\n')
+				answer = strings.TrimSpace(strings.ToLower(answer))
 
-			if answer != "" && answer != "y" && answer != "yes" {
-				fmt.Println()
-				cli.PrintInfo("Bootstrap canceled")
-				return nil
+				if answer != "" && answer != "y" && answer != "yes" {
+					fmt.Println()
+					cli.PrintInfo("Bootstrap canceled")
+					return nil
+				}
 			}
 		} else {
 			fmt.Println("  Status: " + cli.Success("Supported"))
@@ -210,12 +219,16 @@ func runBootstrap(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 
 		// Ask user if they want to install
-		fmt.Print("Would you like MageBox to install these dependencies? [Y/n]: ")
-		reader := bufio.NewReader(os.Stdin)
-		answer, _ := reader.ReadString('\n')
-		answer = strings.TrimSpace(strings.ToLower(answer))
+		installDeps := bootstrapUnattended
+		if !bootstrapUnattended {
+			fmt.Print("Would you like MageBox to install these dependencies? [Y/n]: ")
+			reader := bufio.NewReader(os.Stdin)
+			answer, _ := reader.ReadString('\n')
+			answer = strings.TrimSpace(strings.ToLower(answer))
+			installDeps = answer == "" || answer == "y" || answer == "yes"
+		}
 
-		if answer == "" || answer == "y" || answer == "yes" {
+		if installDeps {
 			fmt.Println()
 			inst := bootstrapper.GetInstaller()
 
@@ -329,12 +342,16 @@ func runBootstrap(cmd *cobra.Command, args []string) error {
 		fmt.Println("  Missing PHP versions: " + cli.Highlight(strings.Join(missingVersions, ", ")))
 		fmt.Println()
 
-		fmt.Print("Would you like to install missing PHP versions? [Y/n]: ")
-		reader := bufio.NewReader(os.Stdin)
-		answer, _ := reader.ReadString('\n')
-		answer = strings.TrimSpace(strings.ToLower(answer))
+		installPHP := bootstrapUnattended
+		if !bootstrapUnattended {
+			fmt.Print("Would you like to install missing PHP versions? [Y/n]: ")
+			reader := bufio.NewReader(os.Stdin)
+			answer, _ := reader.ReadString('\n')
+			answer = strings.TrimSpace(strings.ToLower(answer))
+			installPHP = answer == "" || answer == "y" || answer == "yes"
+		}
 
-		if answer == "" || answer == "y" || answer == "yes" {
+		if installPHP {
 			fmt.Println()
 			inst := bootstrapper.GetInstaller()
 			for _, phpVer := range missingVersions {
@@ -494,6 +511,17 @@ func runBootstrap(cmd *cobra.Command, args []string) error {
 	} else {
 		fmt.Printf("  Config exists: %s\n", cli.Highlight(config.GlobalConfigPath(homeDir)))
 	}
+
+	// Apply --tld override if provided
+	if bootstrapTLD != "" {
+		globalCfg.TLD = bootstrapTLD
+		if err := config.SaveGlobalConfig(homeDir, globalCfg); err != nil {
+			cli.PrintWarning("Failed to save TLD config: %v", err)
+		} else {
+			fmt.Printf("  TLD set to: %s\n", cli.Highlight(bootstrapTLD))
+		}
+	}
+
 	fmt.Print("  Ensuring MageBox directories... ")
 	if warnings := ensureMageBoxDirs(homeDir); len(warnings) > 0 {
 		fmt.Println(cli.Warning("issues"))
@@ -887,12 +915,16 @@ func runBootstrap(cmd *cobra.Command, args []string) error {
 		fmt.Println("  MageBox can install a service that automatically starts all")
 		fmt.Println("  global services and projects on boot/login.")
 		fmt.Println()
-		fmt.Print("Install autostart service? [Y/n]: ")
-		reader := bufio.NewReader(os.Stdin)
-		answer, _ := reader.ReadString('\n')
-		answer = strings.TrimSpace(strings.ToLower(answer))
+		installService := bootstrapUnattended
+		if !bootstrapUnattended {
+			fmt.Print("Install autostart service? [Y/n]: ")
+			reader := bufio.NewReader(os.Stdin)
+			answer, _ := reader.ReadString('\n')
+			answer = strings.TrimSpace(strings.ToLower(answer))
+			installService = answer == "" || answer == "y" || answer == "yes"
+		}
 
-		if answer == "" || answer == "y" || answer == "yes" {
+		if installService {
 			fmt.Println()
 			switch p.Type {
 			case platform.Linux:
