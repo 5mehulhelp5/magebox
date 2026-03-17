@@ -5,6 +5,16 @@ All notable changes to MageBox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-03-17
+
+### Changed
+
+- **Version-Specific Search Ports** - Refined port allocation for OpenSearch and Elasticsearch: moved Elasticsearch base from 9300 to 9500 to provide ample room for both search engines. Updated port documentation accordingly. ([#36](https://github.com/qoliber/magebox/pull/36))
+
+### Removed
+
+- **Magerun2-Overlapping Commands** - Removed `magebox admin`, `magebox mode`, `magebox queue`, and `magebox report` commands that duplicated functionality already provided by magerun2 (`admin:user:*`, `deploy:mode:set`, `queue:consumers:*`, `dev:report:count`). This keeps MageBox focused on environment management. ([#38](https://github.com/qoliber/magebox/pull/38))
+
 ## [1.8.0] - 2026-03-17
 
 ### Added
