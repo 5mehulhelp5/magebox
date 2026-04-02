@@ -94,48 +94,56 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Generate release notes
-        id: release_notes
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
-          cat << 'EOF' > release_notes.md
-          ## MageBox ${{ steps.version.outputs.VERSION }}
+          SEMVER="${VERSION#v}"
 
-          ### Installation
+          # Extract changelog entry for this version from CHANGELOG.md
+          # Captures everything between "## [X.Y.Z]" and the next "## [" heading
+          CHANGELOG=$(awk "/^## \\[${SEMVER}\\]/{found=1; next} /^## \\[/{if(found) exit} found{print}" CHANGELOG.md)
+
+          cat > release_notes.md <<NOTES
+          ## What's New
+
+          ${CHANGELOG}
+          ---
+
+          ## Installation
 
           **macOS (Apple Silicon):**
-          ```bash
+          \`\`\`bash
           curl -L https://github.com/qoliber/magebox/releases/download/${VERSION}/magebox-darwin-arm64 -o /usr/local/bin/magebox
           chmod +x /usr/local/bin/magebox
-          ```
+          \`\`\`
 
           **macOS (Intel):**
-          ```bash
+          \`\`\`bash
           curl -L https://github.com/qoliber/magebox/releases/download/${VERSION}/magebox-darwin-amd64 -o /usr/local/bin/magebox
           chmod +x /usr/local/bin/magebox
-          ```
+          \`\`\`
 
           **Linux (x86_64):**
-          ```bash
+          \`\`\`bash
           curl -L https://github.com/qoliber/magebox/releases/download/${VERSION}/magebox-linux-amd64 -o /usr/local/bin/magebox
           chmod +x /usr/local/bin/magebox
-          ```
+          \`\`\`
 
           **Linux (ARM64):**
-          ```bash
+          \`\`\`bash
           curl -L https://github.com/qoliber/magebox/releases/download/${VERSION}/magebox-linux-arm64 -o /usr/local/bin/magebox
           chmod +x /usr/local/bin/magebox
-          ```
+          \`\`\`
 
-          ### Verify Installation
-          ```bash
+          ## Verify Installation
+          \`\`\`bash
           magebox --version
-          ```
+          \`\`\`
 
-          ### Update Existing Installation
-          ```bash
+          ## Update Existing Installation
+          \`\`\`bash
           magebox self-update
-          ```
-          EOF
+          \`\`\`
+          NOTES
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
