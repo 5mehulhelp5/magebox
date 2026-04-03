@@ -524,6 +524,7 @@ func (g *ComposeGenerator) getValkeyService() ComposeService {
 // getOpenSearchService returns an OpenSearch service configuration
 func (g *ComposeGenerator) getOpenSearchService(svcCfg *config.ServiceConfig, addStandardPort bool) ComposeService {
 	version := svcCfg.Version
+	imageVersion := ResolveOpenSearchVersion(version)
 	port := GetOpenSearchPort(version)
 
 	// Default to 1GB if not specified
@@ -541,7 +542,7 @@ func (g *ComposeGenerator) getOpenSearchService(svcCfg *config.ServiceConfig, ad
 
 	return ComposeService{
 		ContainerName: fmt.Sprintf("magebox-opensearch-%s", version),
-		Image:         fmt.Sprintf("opensearchproject/opensearch:%s", version),
+		Image:         fmt.Sprintf("opensearchproject/opensearch:%s", imageVersion),
 		Ports:         ports,
 		Environment: map[string]string{
 			"discovery.type":                                    "single-node",
@@ -562,6 +563,7 @@ func (g *ComposeGenerator) getOpenSearchService(svcCfg *config.ServiceConfig, ad
 // getElasticsearchService returns an Elasticsearch service configuration
 func (g *ComposeGenerator) getElasticsearchService(svcCfg *config.ServiceConfig, addStandardPort bool) ComposeService {
 	version := svcCfg.Version
+	imageVersion := ResolveElasticsearchVersion(version)
 	port := GetElasticsearchPort(version)
 
 	// Default to 1GB if not specified
@@ -579,7 +581,7 @@ func (g *ComposeGenerator) getElasticsearchService(svcCfg *config.ServiceConfig,
 
 	return ComposeService{
 		ContainerName: fmt.Sprintf("magebox-elasticsearch-%s", version),
-		Image:         fmt.Sprintf("elasticsearch:%s", version),
+		Image:         fmt.Sprintf("elasticsearch:%s", imageVersion),
 		Ports:         ports,
 		Environment: map[string]string{
 			"discovery.type":         "single-node",
@@ -822,6 +824,20 @@ func GetElasticsearchPort(version string) int {
 		return port
 	}
 	return computeSearchPort(9500, normalized)
+}
+
+// ResolveElasticsearchVersion resolves a major.minor version string to the latest available full
+// (major.minor.patch) version by querying Docker Hub. If the input already contains a patch
+// component it is returned unchanged. On any network or parse error the input is also returned
+// unchanged so that Docker can produce an actionable error message.
+func ResolveElasticsearchVersion(version string) string {
+	return resolveDockerTagVersion("library", "elasticsearch", version)
+}
+
+// ResolveOpenSearchVersion resolves a major.minor version string to the latest available full
+// (major.minor.patch) version by querying Docker Hub. See ResolveElasticsearchVersion for rules.
+func ResolveOpenSearchVersion(version string) string {
+	return resolveDockerTagVersion("opensearchproject", "opensearch", version)
 }
 
 // ComposeDir returns the compose directory path
