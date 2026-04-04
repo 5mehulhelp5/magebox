@@ -7,7 +7,8 @@
 The easiest way to install MageBox on macOS or Linux with Homebrew:
 
 ```bash
-brew install qoliber/magebox/magebox
+brew tap qoliber/magebox
+brew install magebox
 ```
 
 ### Install Script

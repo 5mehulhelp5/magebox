@@ -46,7 +46,8 @@ features:
 
 ```bash
 # Install
-brew install qoliber/magebox/magebox
+brew tap qoliber/magebox
+brew install magebox
 
 # First-time setup
 magebox bootstrap

@@ -26,7 +26,8 @@ ddev stop
 
 ```bash
 # macOS
-brew install qoliber/magebox/magebox
+brew tap qoliber/magebox
+brew install magebox
 magebox bootstrap
 
 # Linux

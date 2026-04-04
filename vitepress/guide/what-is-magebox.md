@@ -22,7 +22,8 @@ PHP and Nginx run directly on your machine for direct file access. Database and 
 
 ```bash
 # Install
-brew install qoliber/magebox/magebox
+brew tap qoliber/magebox
+brew install magebox
 
 # First-time setup
 magebox bootstrap

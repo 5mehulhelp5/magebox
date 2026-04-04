@@ -866,7 +866,7 @@ This release includes comprehensive security improvements following a full code 
   - `magebox team add` supports asset storage flags: `--asset-provider`, `--asset-host`, `--asset-port`, `--asset-path`, `--asset-username`
   - `magebox blackfire config` now supports `--server-id`, `--server-token`, `--client-id`, `--client-token` flags
   - `magebox tideways config` now supports `--api-key` flag
-- **Homebrew tap** for easy installation: `brew install qoliber/magebox/magebox`
+- **Homebrew tap** for easy installation: `brew tap qoliber/magebox && brew install magebox`
 - **Install script** for curl-based installation: `curl -fsSL https://get.magebox.dev | bash`
 - **GitHub Actions workflows**:
   - Automatic Homebrew formula updates on new releases

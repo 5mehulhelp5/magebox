@@ -28,7 +28,8 @@ valet unlink
 ## Step 4: Install MageBox
 
 ```bash
-brew install qoliber/magebox/magebox
+brew tap qoliber/magebox
+brew install magebox
 magebox bootstrap
 ```
 
