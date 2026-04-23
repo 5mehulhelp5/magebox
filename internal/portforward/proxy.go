@@ -93,11 +93,11 @@ func forward(client net.Conn, targetAddr string, logger *log.Logger) {
 
 	done := make(chan struct{}, 2)
 	go func() {
-		io.Copy(target, client)
+		_, _ = io.Copy(target, client)
 		done <- struct{}{}
 	}()
 	go func() {
-		io.Copy(client, target)
+		_, _ = io.Copy(client, target)
 		done <- struct{}{}
 	}()
 
